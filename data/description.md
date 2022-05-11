@@ -1,4 +1,7 @@
-Misinformation, fake news & propaganda data set
+**Misinformation, fake news & propaganda data set**
+
+https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k
+
 A dataset containing 79k articles of misinformation, fake news and propaganda.
 
 34975 'true' articles. --> Misinfo_TRUE.csv
@@ -13,5 +16,5 @@ Ahmed H, Traore I, Saad S. (2017) “Detection of Online Fake News Using N-Gram 
 Disinformation and propaganda cases collected by the EUvsDisinfo project. A project started in 2015 that identifies and fact checks disinformation cases originating from pro-Kremlin media that are spread across the EU.
 The articles have all information except the actual text removed and are split up into a set with all the fake news / misinformation, and one with al the true articles.
 
-// For those only interested in Russian propaganda (and not so much misinformation in general), I have added the Russian propaganda in a separate csv called 'EXTRA_RussianPropagandaSubset.csv..'
+_// For those only interested in Russian propaganda (and not so much misinformation in general), I have added the Russian propaganda in a separate csv called 'EXTRA_RussianPropagandaSubset.csv..'_
 
