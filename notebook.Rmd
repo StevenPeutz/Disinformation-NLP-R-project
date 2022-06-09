@@ -15,6 +15,13 @@ Disinformation and propaganda cases collected by the EUvsDisinfo project. A proj
 
 While this might immediately seem like a great classification task, I would suggest also considering clustering / topic modelling. Why clustering? Because by clustering we make a model that can match a newly written article to a previously debunked lie / misinformation narrative, thereby we can immediately debunk a new article without either using an algorithm as argument, or encountering a time delay with regards to waiting for confirmation of a fact checking organisation.
 
+```{r, warning = FALSE, message = FALSE}
+packages <- c("textstem","tokenizers","tidytext","dplyr","stringr","corpus","tidyverse","stopwords","SnowballC","tidyr","topicmodels","ldatuning","wordcloud","stm","Rtsne","ggrepel")
+
+install.packages(setdiff(packages, rownames(installed.packages())))  
+```
+
+
 Libraries
 ```{r, warning = FALSE, message = FALSE}
 # Import Libraries
