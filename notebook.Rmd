@@ -5,16 +5,44 @@ output:
     df_print: paged
 ---
  
+## Introduction
+
+Disinformation, defined as the subset of 'misinformation' where there is intent to mislead, has seen a an astronomical rise in both its success in terms of spread and impact as well in the effort to combat it. Though known state-backed disinformation campaigns date back to at least the cold war era, they have perhaps caught the eye of the public after the 2016 US presidential election (Allcot et al., 2017). Later in 2016 disinformation is claimed to have been influential in the 'Brexit' referendum, and later in 2018 a similar development was suspected during the Brazilian presidential elections. As this was unfolding an explosive growth in so called 'fact-checking' organisation and their cooperation with news agencies, social media companies (e.g. facebook/meta) and governments can be seen. Fact-checking organization, often volunteer based or financed through charity, their capacity tend to be outpaced by the sheer volume of suspected disinformation content.
+
+One supposed solution for this is using AI to automate classification of new articles or posts based on its linguistic aspects. Though improvements are being made here, the most accurate models are strongly dependent on meta data such as publication network which are often not available when shared through social media, and have other downsides such as disproportionately high false positive rates when publication networks that have shared disinformation were to post content without disinformation.
+
+An alternative 'intermediate' solution is offered in this project. Instead of classification we aim to discover the topics that are present in Russian disinformation. By doing this we can streamline fact-checking by establishing a basis on which already fact-checked disinformation can be matched with with newly published unchecked articles and posts. We use Latent Dirichlet topic modelling (LDA) in order to create our mixed membership model. We use LDA because it is an algorithm that uses a three level hierarchical Bayesian model in which each item of a collection is modeled as a finite mixture over an underlying set of topics (Blei et al., 2001).
+
+
+
+## Project scope
+
+This projects restricts itself to pro-Kremlin disinformation. This is specified as 'pro-Kremlin' as direct ties with the Russian Internet Research Agency (IRA) and official backing of the Kremlin are perhaps expected but are not verified with hard proof.
+The scoped will also be limited to a preliminary test of the theoretical possibility and validity of the LDA mixed membership modelling without going into the practical application of the results.
+
+
 
 ## About the data:
 
-Disinformation and propaganda cases collected by the EUvsDisinfo project. A project started in 2015 that identifies and fact checks disinformation cases originating from pro-Kremlin media that are spread across the EU.
+The disinformation texts were collected by the EUvsDisinfo project. A project started in 2015 that identifies and fact checks disinformation cases originating from pro-Kremlin media that are spread across the EU. 
+More information about this project can be found here: https://euvsdisinfo.eu/
+The dataset can be found here: https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k
 
 
-## Why topic modelling, why not add regular 'true' news articles and use classification (i.e. misinfo prediction?)
 
-While this might immediately seem like a great classification task, I would suggest also considering clustering / topic modelling. Why clustering? Because by clustering we make a model that can match a newly written article to a previously debunked lie / misinformation narrative, thereby we can immediately debunk a new article without either using an algorithm as argument, or encountering a time delay with regards to waiting for confirmation of a fact checking organisation.
+## References
 
+H. Allcott and M. Gentzkow. 2017. Social media and fake news in the 2016 election. Journal of Economic Perspectives 31, 2 (2017), 211–36.
+
+Blei, D.M., Ng, A.Y., Jordan, M.I.: Latent dirichlet allocation. In: NIPS, pp. 601–608. MIT Press (2001)
+
+G. Resende, P. Melo, J. C. S. Reis, M. Vasconcelos, J. M. Almeida, F. Benevenuto. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.
+
+
+---
+
+
+Required packages
 ```{r, warning = FALSE, message = FALSE}
 packages <- c("textstem","tokenizers","tidytext","dplyr","stringr","corpus","tidyverse","stopwords","SnowballC","tidyr","topicmodels","ldatuning","wordcloud","stm","Rtsne","ggrepel")
 
@@ -22,7 +50,7 @@ install.packages(setdiff(packages, rownames(installed.packages())))
 ```
 
 
-Libraries
+Required libraries
 ```{r, warning = FALSE, message = FALSE}
 # Import Libraries
 library(textstem)
@@ -64,11 +92,13 @@ mytSNE<- function(thematrix){
 #Cel McCracken
 ```
 
+
 ## Reading in the dataset (csv)
 
-Reading in the dataset from github. The dataset with description added by me can also be found on kaggle here:
+Reading in the dataset from github. The dataset can also be found on kaggle:
 
 https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k
+
 ```{r}
 df = read.csv('https://raw.githubusercontent.com/StevenPeutz/Misinformation-textAnalysis/main/data/EXTRA_RussianPropagandaSubset.csv', na.strings=c("","","NA"), header=FALSE)
 names(df) <- c('id','text')
@@ -76,23 +106,26 @@ names(df) <- c('id','text')
 ```
 
 
-Ovierview of the dataframe and detecting missing values
+Overview of the dataframe and detecting missing values
 ```{r}
 sum(is.na(df$text)) 
 dim(df)
 str(df)
 ```
+
 Exclude missing values
 ```{r}
 df <- na.omit(df)
 ```
- 
+
+### Sampling
+Taking a sample (SRS) to work with for now, to decrease processing time.
 ```{r}
 df2 <- sample_n(df, 100) 
  
 ```
 
-Data preprocessing
+### Data preprocessing
 ```{r}
 df2$clean_text <- df2$text %>% 
   # Make everything lowercase
@@ -111,15 +144,18 @@ df2$clean_text <- df2$text %>%
  
 ```
 
+
 Let's have a look at the lengths of the documents. We have to do this in order to consider whether this appropriate for LDA topic modelling.
 
-We know that LDA is an approprate techinque in the context of tweets. This is interesting because:
+We know from established studies that LDA is an appropriate technique in the context of tweets. This is interesting because:
 
 A) we know LDA can work with fewer than 280 character texts as 280 is the max character length of tweets (ours is on average 257).
 
-B) we can look at which hyperparameter are succesfully used in LDA when working on tweet data as this might be helpful for us as well.
+B) we can look at which hyper parameters are successfully used in LDA specifically when working on tweet data as this might be helpful for us as well given the lengths.
 
-In the end we will validate aftwards by manually (sample based) checking correctness of clustering. Here we can always change of documents to the full texts instead of these document containing the summary / main claim made in the document.
+In the end we will validate afterwards by manually (sample based) checking correctness of our 'clusters'. Here we can always change our documents to the full texts instead of these document containing the summary / main claim made in the document. However, given the aim of this project, it is more interesting to use the shorter texts.
+
+
 ```{r}
 df2  %>% 
   mutate(clean_text_1 = textclean::replace_contraction(.$clean_text),
@@ -131,8 +167,12 @@ df2  %>%
  
 ```
 
-Since our series is too large to eyeball over, let's search for any row that is shorter than 25 characters. This will help us spot if there is a mistake (like a single word or tag as a whole text), but also in general help us spot
-# how many rows will be of little value to LDA due to the shortness.
+
+Since our dataframe is too large to eyeball over, let's search for any row that is shorter than 25 characters. This will help us spot if there is a mistake (like a single word or tag as a whole text), but also in general help us spot
+
+How many rows will be of little value to LDA due to the shortness?
+This can be experimented with later on.
+
  
 ```{r}
 df2  %>% 
@@ -146,8 +186,17 @@ df2  %>%
  
 ```
 
- 
-Comparison Stemming
+
+#### Stemming
+We need to compare stemming methods as this will be crucial for given that the nature of these texts mean there will be a lot of demonyms used, which will can be important in determining topics. Yet we do want for example 'russia' and 'russian' to become the same 'stemmed' word e.g. 'Russi' or'Russ',  and the same for 'ukraine' and 'ukranian', while being careful about what this does to e.g.  'eu' and 'europe'. (In python this can be accomplished with the Lancaster stemmer).
+
+
+Comparing Stemmers:
+- stem_words
+- lemmatize_words (a more intensive but more linguistically correct method called lemmatization)
+- stem_snowball
+- wordStem
+
 ```{r}
 df2  %>% 
   mutate(clean_text_1 = textclean::replace_contraction(.$clean_text),
@@ -176,6 +225,7 @@ df3 <- df2  %>%
 ```
 
 
+Let's see our counts without having solves the denonym problem
 
 ```{r}
 df3 %>% 
@@ -188,7 +238,7 @@ df3 %>%
  
 ```
 
-Replacing top words 
+Let's use 'replace_all' on the most common denonyms identified above, to manually 'stem' these.
 ```{r}
 df3$stem <- df3$stem %>%   
   str_replace_all("ukrainian", "ukrain") %>%
@@ -196,7 +246,7 @@ df3$stem <- df3$stem %>%
  
 ```
 
-Let's count words (regardless of which text) and visualize to get a rough view of the content an its topics as a whole.
+Let's count words (regardless of which text) and visualize in order to get a rough view of the content an its topics as a whole.
 ```{r}
  df3 %>% 
   group_by(stem) %>% 
@@ -207,12 +257,11 @@ Let's count words (regardless of which text) and visualize to get a rough view o
   geom_bar(stat='identity')
  
 ```
+
 This is already very useful in deciding our next steps.
 
 We can see the following;
 
-The need to lemmatize/stem) see for example russia and russian, west and western etc. // while being careful about what this does to 'eu' and 'europe'.
-If we were to use tf-idf, we probably want to remove 'russia' (its stems) first. However, we would not want to remove Ukrain eventhough the difference is not even that large. This because where a selfreference using a country name is simply conceptually very different from using a neighbouring country's name, in terms of meaning. This means we have to be carefull when using the parameter that removes word based on cross document occurance.
 With regards to the actual content, we here see our first hint -from articles published between Jan 25th 2015 and Jan 2nd 2020!- that Ukrain was somewhat of an obsession in pro-Kremlin media.. //could this in hindsight have been a predictor of the invasion?
 
 ```{r}
