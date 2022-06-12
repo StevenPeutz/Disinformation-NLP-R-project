@@ -32,13 +32,13 @@ The dataset can be found here: https://www.kaggle.com/datasets/stevenpeutz/misin
 
 ## References
 
-H. Allcott and M. Gentzkow. 2017. Social media and fake news in the 2016 election. Journal of Economic Perspectives 31, 2 (2017), 211–36.
+Allcott, H., Gentzkow, M. Social media and fake news in the 2016 election. Journal of Economic Perspectives 31, 2 (2017), 211–36.
 
 Blei, D.M., Ng, A.Y., Jordan, M.I.: Latent dirichlet allocation. In: NIPS, pp. 601–608. MIT Press (2001)
 
-G. Resende, P. Melo, J. C. S. Reis, M. Vasconcelos, J. M. Almeida, F. Benevenuto. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.  
+Resende G., Melo P., Reis J. C. S., Vasconcelos M., Almeida J. M., Benevenuto F. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.  
 
-M. Roberts, B. Stewart, D. Tingley, and E. Airoldi, The Structural Topic Model and Applied Social Science (2013), Prepared for the NIPS 2013 Workshop on Topic Models: Computation, Application, and Evaluation.  
+Roberts M., Stewart B., Tingley D., and Airoldi E. The Structural Topic Model and Applied Social Science (2013), Prepared for the NIPS 2013 Workshop on Topic Models: Computation, Application, and Evaluation.  
 
 
 ---  
@@ -46,7 +46,7 @@ M. Roberts, B. Stewart, D. Tingley, and E. Airoldi, The Structural Topic Model a
 ## Packages & Libraries  
 
 
-Required packages
+Required packages & libraries
 ```{r, warning = FALSE, message = FALSE}
 packages <- c("textstem","tokenizers","tidytext","dplyr","stringr","corpus","tidyverse","stopwords","SnowballC","tidyr","topicmodels","ldatuning","wordcloud","stm","Rtsne","ggrepel")
 
@@ -54,7 +54,6 @@ install.packages(setdiff(packages, rownames(installed.packages())))
 ```
 
 
-Required libraries
 ```{r, warning = FALSE, message = FALSE}
 # Import Libraries
 library(textstem)
@@ -125,7 +124,7 @@ df <- na.omit(df)
 ## Sampling
 Taking a sample (SRS) to work with for now, to decrease processing time.
 ```{r}
-df2 <- sample_n(df, 100) 
+df2 <- sample_n(df, 1000) 
  
 ```
 
@@ -302,6 +301,10 @@ optimal_k_topics <- ldatuning::FindTopicsNumber(
 FindTopicsNumber_plot(optimal_k_topics)
  
 ```
+Here the CaoJuan2009 metric suggest a cutoff at 4 topics, with 6 as second best. The Deveaud2014 metric is more linear here and has a less clear cutoff, mostly suggesting that 5 however is considerable worse than 4, but also that 4 topics is worse than 3. Combining the two, and the relative clarity of the curve in the CaoJuan2009 metric we will set our STM and LDA models to 4 topics. 
+
+
+
 
 
 ## Topic modelling > STM  
@@ -435,7 +438,7 @@ lda_gamma %>%
 ```{r}
 lda_topics <- lda_gamma %>% 
   spread( key = topic, value = gamma) %>% 
-  dplyr::select(`1` ,  `2`  , `3`  , `4`)
+  dplyr::select(`1` ,  `2`  , `3` , `4`)
 
 lda_topic_doc <-lda_gamma %>% 
   spread( key = topic, value = gamma) %>% 
