@@ -32,13 +32,17 @@ The dataset can be found here: https://www.kaggle.com/datasets/stevenpeutz/misin
 
 ## References
 
-Allcott, H., Gentzkow, M. Social media and fake news in the 2016 election. Journal of Economic Perspectives 31, 2 (2017), 211–36.
+Allcott, H., Gentzkow, M. Social media and fake news in the 2016 election. Journal of Economic Perspectives 31, 2 (2017), 211–36.  
+
+Arun R., Suresh V., Madhavan V., Murthy N. On finding the natural number of topics with latent dirichlet allocation: Some observations. In Advances in knowledge discovery and data mining, Mohammed J. Zaki, Jeffrey Xu Yu, Balaraman Ravindran and Vikram Pudi (eds.). Springer Berlin Heidelberg (2010), 391–402.  
 
 Blei, D.M., Ng, A.Y., Jordan, M.I.: Latent dirichlet allocation. In: NIPS, pp. 601–608. MIT Press (2001)
 
 Resende G., Melo P., Reis J. C. S., Vasconcelos M., Almeida J. M., Benevenuto F. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.  
 
 Roberts M., Stewart B., Tingley D., and Airoldi E. The Structural Topic Model and Applied Social Science (2013), Prepared for the NIPS 2013 Workshop on Topic Models: Computation, Application, and Evaluation.  
+
+
 
 
 ---  
@@ -287,7 +291,9 @@ text_dtm <- word_count %>%
  
 ```
 
-Finding the optimal number of topics
+Finding the optimal number of topics  
+
+For this we use the lda tuning package which has four performance tuning metrics, that are calculated for each iteration with a different k topics. As this is very computation intensive we are using two metrics instead of the recommend four for now. (More details on lda tuning and the four metrics can be found in Arun et el., 2010)  
 ```{r}
 optimal_k_topics <- ldatuning::FindTopicsNumber(
   text_dtm,
@@ -301,7 +307,7 @@ optimal_k_topics <- ldatuning::FindTopicsNumber(
 FindTopicsNumber_plot(optimal_k_topics)
  
 ```
-Here the CaoJuan2009 metric suggest a cutoff at 4 topics, with 6 as second best. The Deveaud2014 metric is more linear here and has a less clear cutoff, mostly suggesting that 5 however is considerable worse than 4, but also that 4 topics is worse than 3. Combining the two, and the relative clarity of the curve in the CaoJuan2009 metric we will set our STM and LDA models to 4 topics. 
+Here the CaoJuan2009 metric suggest a maximum topics of 5. The Deveaud2014 metric is more linear here and has a less clear cutoff, but we can see a sudden steepening of the curve after 5 topics. Combining the two, we will set our STM and LDA models to 5 topics. 
 
 
 
