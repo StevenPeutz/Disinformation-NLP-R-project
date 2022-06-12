@@ -36,10 +36,14 @@ H. Allcott and M. Gentzkow. 2017. Social media and fake news in the 2016 electio
 
 Blei, D.M., Ng, A.Y., Jordan, M.I.: Latent dirichlet allocation. In: NIPS, pp. 601–608. MIT Press (2001)
 
-G. Resende, P. Melo, J. C. S. Reis, M. Vasconcelos, J. M. Almeida, F. Benevenuto. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.
+G. Resende, P. Melo, J. C. S. Reis, M. Vasconcelos, J. M. Almeida, F. Benevenuto. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.  
+
+M. Roberts, B. Stewart, D. Tingley, and E. Airoldi, The Structural Topic Model and Applied Social Science (2013), Prepared for the NIPS 2013 Workshop on Topic Models: Computation, Application, and Evaluation.  
 
 
----
+---  
+
+## Packages & Libraries  
 
 
 Required packages
@@ -118,14 +122,14 @@ Exclude missing values
 df <- na.omit(df)
 ```
 
-### Sampling
+## Sampling
 Taking a sample (SRS) to work with for now, to decrease processing time.
 ```{r}
 df2 <- sample_n(df, 100) 
  
 ```
 
-### Data preprocessing
+## Data preprocessing
 ```{r}
 df2$clean_text <- df2$text %>% 
   # Make everything lowercase
@@ -168,10 +172,9 @@ df2  %>%
 ```
 
 
-Since our dataframe is too large to eyeball over, let's search for any row that is shorter than 25 characters. This will help us spot if there is a mistake (like a single word or tag as a whole text), but also in general help us spot
+Since our dataframe is too large to eyeball over, let's search for any row that is shorter than 25 characters. This will help us spot if there is a mistake (like a single word or tag as a whole text), but also in general help us spot how many rows might be of little value to LDA due to the shortness.
 
-How many rows will be of little value to LDA due to the shortness?
-This can be experimented with later on.
+The chosen length and filtering these out or leaving them in can be experimented with later on.
 
  
 ```{r}
@@ -187,15 +190,15 @@ df2  %>%
 ```
 
 
-#### Stemming
+## Stemming
 We need to compare stemming methods as this will be crucial for given that the nature of these texts mean there will be a lot of demonyms used, which will can be important in determining topics. Yet we do want for example 'russia' and 'russian' to become the same 'stemmed' word e.g. 'Russi' or'Russ',  and the same for 'ukraine' and 'ukranian', while being careful about what this does to e.g.  'eu' and 'europe'. (In python this can be accomplished with the Lancaster stemmer).
 
 
-Comparing Stemmers:
-- stem_words
-- lemmatize_words (a more intensive but more linguistically correct method called lemmatization)
-- stem_snowball
-- wordStem
+Comparing Stemmers:  
+- stem_words (1)  
+- lemmatize_words (2, a more intensive but more linguistically correct method called lemmatization)  
+- stem_snowball (3)    
+- wordStem (4)    
 
 ```{r}
 df2  %>% 
@@ -225,7 +228,7 @@ df3 <- df2  %>%
 ```
 
 
-Let's see our counts without having solves the denonym problem
+Let's see our counts without having solved the denonym problem
 
 ```{r}
 df3 %>% 
@@ -238,15 +241,17 @@ df3 %>%
  
 ```
 
-Let's use 'replace_all' on the most common denonyms identified above, to manually 'stem' these.
+We can see that denonym use is enormous, we will have to fix this.  
+We can use 'replace_all' on the most common denonyms identified above, to manually 'stem' these.
 ```{r}
 df3$stem <- df3$stem %>%   
   str_replace_all("ukrainian", "ukrain") %>%
-  str_replace_all("russian", "russia")
+  str_replace_all("russian", "russia") %>%
+  str_replace_all("european", "europ") #since 'europe' already is stemmed to 'europ', but 'european' was not. 'eu' remains a separate term due its 'union' context.
  
 ```
 
-Let's count words (regardless of which text) and visualize in order to get a rough view of the content an its topics as a whole.
+Let's count words again (regardless of which text) and visualize in order to get a rough view of the content an its topics as a whole, now that we have fixed our denonym problem.
 ```{r}
  df3 %>% 
   group_by(stem) %>% 
@@ -262,7 +267,8 @@ This is already very useful in deciding our next steps.
 
 We can see the following;
 
-With regards to the actual content, we here see our first hint -from articles published between Jan 25th 2015 and Jan 2nd 2020!- that Ukrain was somewhat of an obsession in pro-Kremlin media.. //could this in hindsight have been a predictor of the invasion?
+With regards to the actual content, we here see our first hint -from articles published between Jan 25th 2015 and Jan 2nd 2020!- that Ukrain was somewhat of an obsession in pro-Kremlin media.. //could this in hindsight have had some sort of predictive value when it comes to the invasion we are currently witnessing?   
+(remember, the invasion we are seeing now was originally expected to be nothing more than bluff or fear mongenering by many)
 
 ```{r}
 word_count <- df3 %>% 
@@ -270,6 +276,8 @@ word_count <- df3 %>%
   bind_tf_idf(stem, id,   n)
  
 ```
+
+## Topic Modelling Prep
 
 Creating a Document Term Matrix
 ```{r}
@@ -295,7 +303,10 @@ FindTopicsNumber_plot(optimal_k_topics)
  
 ```
 
-Document Term Matrix for topic modelling and estimation of the STM topic model algorithm
+
+## Topic modelling > STM  
+Document Term Matrix for topic modelling and estimation of the STM topic model algorithm.  
+The Structural Topic Model (STM) algorithm is in essence a correlated topic model algorithm that is expended to be able to use metadata (such as publication, author, date, shares etc as added features), and is able to provide insight into the weight these metadata features play in the model (Roberts, 2013). 
 ```{r, warning = FALSE}
 text_dfm <- df3  %>% 
   count(id, stem, sort = TRUE) %>% 
@@ -320,6 +331,7 @@ stm_beta %>%
   facet_wrap(~topic, scales = "free")+
   coord_flip()
 ```
+
 Topic per each text
 ```{r}
 stm_gamma <- tidy(stm_model, matrix = "gamma",
@@ -345,7 +357,9 @@ stm_topic_doc <-stm_gamma %>%
 
 
 
-# Validate topic modelling 
+## Primary Validation of STM using tSNE  
+The tSNE method (t-distributed Stochastic Neighbor Embedding) is a dimensionality reduction method, used mainly for visualization of data in 2D and 3D maps. This method can find non-linear connections in the data, in this manner we can get a visualization of the topics and their distances as cluster reduced to a 2-dimensional level. 
+By itself the TSNE visualization remains inconclusive as to validate a certain clustering or topic modelling, but it can be very insightful when used to compare different models on the same data.
 ```{r}
 stm_gamma %>% 
   ggplot(aes(gamma, fill = as.factor(topic)))+
@@ -373,8 +387,9 @@ resdf %>%
  
 ```
 
- 
-Latent Dirichlet Allocation (LDA)
+## Topic modelling > LDA  
+We use Latent Dirichlet topic modelling (LDA) in order to create our mixed membership model. We use LDA because it is an algorithm that uses a three level hierarchical Bayesian model in which each item of a collection is modeled as a finite mixture over an underlying set of topics (Blei et al., 2001).  
+This in practical terms allows us to take into account that text might contain e.g. two topics instead of simply one.
 ```{r}
 lda_model <- LDA(text_dtm, k = 4, control = list(seed = 10)) 
  
@@ -404,8 +419,9 @@ lda_beta %>%
   coord_flip() 
 ```
 
-# Validate results
-Excellent job since our topic modelling take the texts into 1 topic. The topic modelling assures that the probability of the text to belong to a topic is very high. Very strong associated
+## Primary Validation of LDA using tSNE  
+Looking at the tSNE visualization -in comparison to that of the STM model- shows a far greater distance between the topics on this 2-dimensional pane, yet with equally or even smaller distances within each topic. This is suggestive of an accurate topic model.   
+(As described before, he tSNE method is a dimensionality reduction method, used mainly for visualization of data in 2D and 3D maps. This method can find non-linear connections in the data, in this manner we can get a visualization of the topics and their distances as cluster reduced to a 2-dimensional level.)
 
 ```{r}
 lda_gamma <- tidy(lda_model, matrix = "gamma") 
@@ -449,6 +465,8 @@ lda_resdf %>%
   ggplot(aes(x = x, y =y, color = as.factor(cluster)))+
   geom_point() 
 ```
+
+## Topic Interpretation
 
 Wordcloud of top 20 words, Topic 1
 ```{r, warning = FALSE}
