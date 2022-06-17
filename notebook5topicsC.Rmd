@@ -5,14 +5,14 @@ output:
     df_print: paged
     code_folding: hide
 ---
- 
+
 ## Introduction
 
 Disinformation, defined as the subset of 'misinformation' where there is intent to mislead, has seen a an astronomical rise in both its success in terms of spread and impact as well in the effort to combat it. Though known state-backed disinformation campaigns date back to at least the cold war era, they have perhaps caught the eye of the public after the 2016 US presidential election (Allcot et al., 2017). Later in 2016 disinformation is claimed to have been influential in the 'Brexit' referendum, and later in 2018 a similar development was suspected during the Brazilian presidential elections. As this was unfolding an explosive growth in so called 'fact-checking' organisation and their cooperation with news agencies, social media companies (e.g. facebook/meta) and governments can be seen. Fact-checking organization, often volunteer based or financed through charity, their capacity tend to be outpaced by the sheer volume of suspected disinformation content.
 
 One supposed solution for this is using AI to automate classification of new articles or posts based on its linguistic aspects. Though improvements are being made here, the most accurate models are strongly dependent on meta data such as publication network which are often not available when shared through social media, and have other downsides such as disproportionately high false positive rates when publication networks that have shared disinformation were to post content without disinformation.
 
-An alternative 'intermediate' solution is offered in this project. Instead of classification we aim to discover the topics that are present in Russian disinformation. By doing this we can streamline fact-checking by establishing a basis on which already fact-checked disinformation can be matched with with newly published unchecked articles and posts. We use Latent Dirichlet topic modelling (LDA) in order to create our mixed membership model. We use LDA because it is an algorithm that uses a three level hierarchical Bayesian model in which each item of a collection is modeled as a finite mixture over an underlying set of topics (Blei et al., 2001).
+An alternative 'intermediate' solution is offered in this project. Instead of classification we aim to discover the topics that are present in Russian propaganda. By doing this we can streamline fact-checking by establishing a basis on which already fact-checked disinformation and propaganda can be matched with with newly published unchecked articles and posts. We use Latent Dirichlet topic modelling (LDA) in order to create our mixed membership model. We use LDA because it is an algorithm that uses a three level hierarchical Bayesian model in which each item of a collection is modeled as a finite mixture over an underlying set of topics (Blei et al., 2001).
 
 
 
@@ -29,6 +29,16 @@ The disinformation texts were collected by the EUvsDisinfo project. A project st
 More information about this project can be found here: https://euvsdisinfo.eu/
 The dataset can be found here: https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k
 
+## Conclusion
+LDA seemed to perform a lot better for our short text data format compared to STM. The tSNE was useful for a rough estimate of the distance between and within topic reduced to two dimensions.
+Continuing with LDA we decided on 4 topics (where 6 topics was also considered, and is still a consideration for future research). This was based on primarily maximizing the Devaeud metric and choosing the second or third best number from the CaiJuan metric. (Minimizing the CaoJuan metric suggests 6 topics instead).  
+This resulted in the following four topics:  
+1 'Chemical attack Syria' (also containing: america(n), syria(n), atack, chemic(al), czech(ia), trump)  
+2 'War at bigger scope' (keywords: nato, sanctions, europe, military, war, poland, soviet, georgia)  
+3 'Ukraine war' (keywords: ukraine, porochenko, donbas, crimea, kyiv)  
+4 'Picking sides' (keywords: america, west(ern), belarus, germany, eu, europe, countries, nations)   
+As we identify and interpet our topics it is important to keep in mind that the Ukraine war had not started! Yet here especially in topic 3 it is hard not to imagine we are seeing a glimpse into what was perhaps already planned by the Kremlin.  
+We use manual expert labeling (by two of the researchers) of 30 randomly sampled texts, where the predicted labels were unseen by the experts (to prevent bias). This resulted in a 77% precision.
 
 
 ## References
@@ -128,7 +138,7 @@ df1 <- df %>% distinct(text, .keep_all = TRUE)
 ```
 
 ## Sampling
-Taking a sample (SRS) to work with for now, to decrease processing time.
+Taking a sample (SRS) to work with as both topic modelling algorithms used (STM & LDA) are computationally intensive, and by taking a random sample we significantly decrease processing time.
 ```{r}
 set.seed(10)
 df2 <- sample_n(df1, 2000) 
@@ -647,19 +657,40 @@ set.seed(10)
 df_manual <- sample_n(df2, 30)
 df_manual
 ```
-My random sample has given me the text with the following ID's; 1607	4158	298	6395	3920	6319	3682	2842	6166	7263.  
+My random sample has given me the text with the following ID's. 
 Reading through the raw texts (without stemming or other changes, we assign the them to topics.  
-1607 -> topic: 3 | 4  
-4158 -> topic: 1 | 4  
-298 -> topic: 2 | 5   
-6395 -> topic: 5 | 1  
-3920 -> topic: undecided : undecided (2?)  
-6319	-> topic: 4 (partly topic 2) | undecided(5?)  
-3682	-> topic: undecided (2 and 4) | undecided  
-2842	-> topic: 2 (partly topic 4) | 4  
-6166	-> topic: 2 (partly topic 1) | 4  
-7263 -> topic: 3 (partly topic 4) | 2   
- 
+"ID - expert labeling - topic model label"  
+4972 - 4 | 4  
+399	- undecided | 3  
+6452 - 1 | 1  
+7079 - 2 (or 3)	| 2  
+5811 - 3 | 3  
+1834 - 4 | 4  
+2734 - 3 | 3  	
+5502 - 3 | 2  
+6924 - 2 (and 3) | 2  
+881 - undecided | 1  
+606	- 2 and 4 |4  
+3395 - 2 and 3 | 3  	
+2029 - 3 and 2 |3  
+3174 - 3 or undecided |3  
+6125 - 4 | 4  
+338-> 4 | 4  
+6312	->4 |2  
+4926->3	|3  
+315	->3 |3  
+4980->4|4  
+2017	->3 or 4|3  
+637	->4|4  
+4290	->4 or 1|1  
+6161	->4|2  
+6080	->4 or 2|4  
+7155	->3 or 1 or 4|4  
+6209	->3|3  
+4703	->1|1  
+3621->1, 2 |2  	
+3943	->2, 4|3  
+
 
 ```{r}
 df_manual %>% 
@@ -669,6 +700,35 @@ df_manual %>%
  
 ```
 
+```{r}
+manual_labelling <- c(4,'undecided',1,2,3,4,3,3,"2 or 3",
+                      "undecided", "2 or 4", "2 or 3", "3 or 2",
+                      "3 or undecided", 4,4,4,3,3,4, "3 or 4",
+                      4,"4 or 1",4,"4 or 2", "3 or 1",
+                      3,1,"1 or 2", "2 or 4")
+
+df_manual %>% 
+  mutate(document = as.character(id)) %>% 
+  left_join(lda_topic_doc) %>% 
+  mutate(manual_labelling = manual_labelling) %>% 
+  dplyr::select(document, text, manual_labelling, topic_dominant)
+
+```
+
+## Conclusion
+LDA seemed to perform a lot better for our short text data format compared to STM. The tSNE was useful for a rough estimate of the distance between and within topic reduced to two dimensions.
+Continuing with LDA we decided on 4 topics (where 6 topics was also considered, and is still a consideration for future research). This was based on primarily maximizing the Devaeud metric and choosing the second or third best number from the CaiJuan metric. (Minimizing the CaoJuan metric suggests 6 topics instead).  
+This resulted in the following four topics:  
+1 'Chemical attack Syria' (also containing: america(n), syria(n), atack, chemic(al), czech(ia), trump)  
+2 'War at bigger scope' (keywords: nato, sanctions, europe, military, war, poland, soviet, georgia)  
+3 'Ukraine war' (keywords: ukraine, porochenko, donbas, crimea, kyiv)  
+4 'Picking sides' (keywords: america, west(ern), belarus, germany, eu, europe, countries, nations)   
+As we identify and interpet our topics it is important to keep in mind that the Ukraine war had not started! Yet here especially in topic 3 it is hard not to imagine we are seeing a glimpse into what was perhaps already planned by the Kremlin.  
+We use manual expert labeling (by two of the researchers) of 30 randomly sampled texts, where the predicted labels were unseen by the experts (to prevent bias). This resulted in a 77% precision.  
+
+
+
+We aim to discover the topics that are present in Russian propaganda prior to the Ukraine invasion.Through the use of LDA we found that Ukraine (including the Donbas and the Crimea) was heavily mentioned within the Russian propaganda, and formed a unique topic by itself. 
 
 
 
@@ -676,6 +736,17 @@ df_manual %>%
 
 
 
+## References
+
+Allcott, H., Gentzkow, M. Social media and fake news in the 2016 election. Journal of Economic Perspectives 31, 2 (2017), 211–36.  
+
+Arun R., Suresh V., Madhavan V., Murthy N. On finding the natural number of topics with latent dirichlet allocation: Some observations. In Advances in knowledge discovery and data mining, Mohammed J. Zaki, Jeffrey Xu Yu, Balaraman Ravindran and Vikram Pudi (eds.). Springer Berlin Heidelberg (2010), 391–402.  
+
+Blei, D.M., Ng, A.Y., Jordan, M.I.: Latent dirichlet allocation. In: NIPS, pp. 601–608. MIT Press (2001)
+
+Resende G., Melo P., Reis J. C. S., Vasconcelos M., Almeida J. M., Benevenuto F. Analyzing Textual (Mis)Information Shared in WhatsApp Groups. In Proceedings of the 10th ACM Conference on Web Science (WebSci '19). Association for Computing Machinery, New York, NY, USA (2019), 225–234.  
+
+Roberts M., Stewart B., Tingley D., and Airoldi E. The Structural Topic Model and Applied Social Science (2013), Prepared for the NIPS 2013 Workshop on Topic Models: Computation, Application, and Evaluation. 
 
 
 
