@@ -27,7 +27,7 @@ The scoped will also be limited to a preliminary test of the theoretical possibi
 
 The disinformation texts were collected by the EUvsDisinfo project. A project started in 2015 that identifies and fact checks disinformation cases originating from pro-Kremlin media that are spread across the EU. 
 More information about this project can be found here: https://euvsdisinfo.eu/
-The dataset can be found here: https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k
+The dataset collected from EUvsDisinfo runs from 2015 to 2019, and can be found here: https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k
 
 ## Conclusion
 LDA seemed to perform a lot better for our short text data format compared to STM. The tSNE was useful for a rough estimate of the distance between and within topic reduced to two dimensions.
@@ -727,7 +727,7 @@ As we identify and interpet our topics it is important to keep in mind that the 
 We use manual expert labeling (by two of the researchers) of 30 randomly sampled texts, where the predicted labels were unseen by the experts (to prevent bias). This resulted in a 77% precision.  
 
 
-
+### elevator pitch
 We aim to discover the topics that are present in Russian propaganda prior to the Ukraine invasion.Through the use of LDA we found that Ukraine (including the Donbas and the Crimea) was heavily mentioned within the Russian propaganda, and formed a unique topic by itself. 
 
 

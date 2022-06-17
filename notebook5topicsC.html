@@ -1749,13 +1749,13 @@ networks that have shared disinformation were to post content without
 disinformation.</p>
 <p>An alternative ‘intermediate’ solution is offered in this project.
 Instead of classification we aim to discover the topics that are present
-in Russian disinformation. By doing this we can streamline fact-checking
-by establishing a basis on which already fact-checked disinformation can
-be matched with with newly published unchecked articles and posts. We
-use Latent Dirichlet topic modelling (LDA) in order to create our mixed
-membership model. We use LDA because it is an algorithm that uses a
-three level hierarchical Bayesian model in which each item of a
-collection is modeled as a finite mixture over an underlying set of
+in Russian propaganda. By doing this we can streamline fact-checking by
+establishing a basis on which already fact-checked disinformation and
+propaganda can be matched with with newly published unchecked articles
+and posts. We use Latent Dirichlet topic modelling (LDA) in order to
+create our mixed membership model. We use LDA because it is an algorithm
+that uses a three level hierarchical Bayesian model in which each item
+of a collection is modeled as a finite mixture over an underlying set of
 topics (Blei et al., 2001).</p>
 </div>
 <div id="project-scope" class="section level2">
@@ -1774,7 +1774,8 @@ practical application of the results.</p>
 project started in 2015 that identifies and fact checks disinformation
 cases originating from pro-Kremlin media that are spread across the EU.
 More information about this project can be found here: <a href="https://euvsdisinfo.eu/" class="uri">https://euvsdisinfo.eu/</a>
-The dataset can be found here: <a href="https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k" class="uri">https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k</a></p>
+The dataset collected from EUvsDisinfo runs from 2015 to 2019, and can
+be found here: <a href="https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k" class="uri">https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k</a></p>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
@@ -1872,8 +1873,9 @@ df1 &lt;- df %&gt;% distinct(text, .keep_all = TRUE)</code></pre>
 </div>
 <div id="sampling" class="section level2">
 <h2>Sampling</h2>
-<p>Taking a sample (SRS) to work with for now, to decrease processing
-time.</p>
+<p>Taking a sample (SRS) to work with as both topic modelling algorithms
+used (STM &amp; LDA) are computationally intensive, and by taking a
+random sample we significantly decrease processing time.</p>
 <pre class="r"><code>set.seed(10)
 df2 &lt;- sample_n(df1, 2000) </code></pre>
 <pre class="r"><code>df2  %&gt;% 
@@ -2473,6 +2475,10 @@ already planned by the Kremlin.<br />
 We use manual expert labeling (by two of the researchers) of 30 randomly
 sampled texts, where the predicted labels were unseen by the experts (to
 prevent bias). This resulted in a 77% precision.</p>
+<p>We aim to discover the topics that are present in Russian propaganda
+prior to the Ukraine invasion.Through the use of LDA we found that
+Ukraine (including the Donbas and the Crimea) was heavily mentioned
+within the Russian propaganda, and formed a unique topic by itself.</p>
 </div>
 <div id="references-1" class="section level2">
 <h2>References</h2>
