@@ -120,34 +120,53 @@ dim(df)
 str(df)
 ```
 
-Exclude missing values
+Exclude missing values and removing duplicate texts
 ```{r}
 df <- na.omit(df)
+df1 <- df %>% distinct(text, .keep_all = TRUE)
 ```
 
 ## Sampling
 Taking a sample (SRS) to work with for now, to decrease processing time.
 ```{r}
-df2 <- sample_n(df, 2000) 
+df2 <- sample_n(df1, 2000) 
+ 
+```
+
+
+```{r}
+df2  %>% 
+ 
+  filter(str_detect(text, "^russia")) %>% 
+ 
+  dplyr::select(text)
  
 ```
 
 ## Data preprocessing
 ```{r}
 df2$clean_text <- df2$text %>% 
-  # Make everything lowercase
-  str_to_lower() %>%
   str_remove_all("[^a-zA-Z\\s]")  %>% 
   # Remove URLs
   str_remove_all(" ?(f|ht)(tp)(s?)(://)(.*)[.|/](.*)") %>%
   # Replace "&" character reference with "and"
   str_replace_all("&amp;", "and") %>%
+  # Remove nbsp 
+  str_replace_all("nbsp", " ") %>%
+  # Replace US to USA 
+  str_replace_all("US", "USA") %>%
+  # Replace European Union to EU
+  str_replace_all("European Union", "EU") %>%
+  # Replace European Union to EU
+  str_replace_all("European Court", "EU") %>%
   # Remove puntucation, using a standard character class
   str_remove_all("[[:punct:]]") %>%
   # Replace any newline characters with a space
   str_replace_all("\\\n", " ") %>%
   # Remove any trailing whitespace around the text
-  str_trim("both") 
+  str_trim("both") %>%
+  # Make everything lowercase
+  str_to_lower()
  
 ```
 
@@ -156,7 +175,7 @@ Let's have a look at the lengths of the documents. We have to do this in order t
 
 We know from established studies that LDA is an appropriate technique in the context of tweets. This is interesting because:
 
-A) we know LDA can work with fewer than 280 character texts as 280 is the max character length of tweets (ours is on average 257).
+A) we know LDA can work with fewer than 280 character texts as 280 is the max character length of tweets (ours is on average 241).
 
 B) we can look at which hyper parameters are successfully used in LDA specifically when working on tweet data as this might be helpful for us as well given the lengths.
 
@@ -167,7 +186,7 @@ In the end we will validate afterwards by manually (sample based) checking corre
 df2  %>% 
   mutate(clean_text_1 = textclean::replace_contraction(.$clean_text),
          len_clean_text = nchar(clean_text_1),
-         len_25 = ifelse(len_clean_text > 130, "More than 25", "Less than 25"),
+         len_25 = ifelse(len_clean_text > 25, "More than 25", "Less than 25"),
          word = str_split(clean_text_1, "\\W+")
          ) %>% 
   summarise(mean = mean(len_clean_text))
@@ -184,7 +203,7 @@ The chosen length and filtering these out or leaving them in can be experimented
 df2  %>% 
   mutate(clean_text_1 = textclean::replace_contraction(.$clean_text),
          len_clean_text = nchar(clean_text_1),
-         len_25 = ifelse(len_clean_text > 130, "More than 25", "Less than 25"),
+         len_25 = ifelse(len_clean_text > 25, "More than 25", "Less than 25"),
          word = str_split(clean_text_1, "\\W+")
          ) %>% 
   group_by(len_25) %>% 
@@ -219,6 +238,25 @@ df2  %>%
  
 ```
 
+#
+#
+##
+#
+```{r}
+df2  %>% 
+  mutate(clean_text_1 = textclean::replace_contraction(.$clean_text),
+         len_clean_text = nchar(clean_text_1),
+         word = str_split(clean_text_1, "\\W+")) %>% 
+  unnest(word)  %>% 
+  anti_join(get_stopwords(source = "stopwords-iso")) %>% 
+  filter(str_detect(word, "^us")) %>% 
+  mutate(stem = stem_words(word),
+         stem1 = lemmatize_words(word),
+         stem2 = stem_snowball(word, algorithm = "en"),
+         stem3 =  wordStem(word)) %>% 
+  dplyr::select(word, stem, stem1, stem2, stem3)
+ 
+```
 
 ```{r}
 df3 <- df2  %>% 
@@ -250,6 +288,7 @@ We can use 'replace_all' on the most common denonyms identified above, to manual
 df3$stem <- df3$stem %>%   
   str_replace_all("ukrainian", "ukrain") %>%
   str_replace_all("russian", "russia") %>%
+  str_replace_all("russia", " ") %>%
   str_replace_all("european", "europ") %>% #since 'europe' already is stemmed to 'europ', but 'european' was not. 'eu' remains a separate term due its 'union' context. (rethough this, better as just eu, as european union is seperated and now is added to europe count, while eu is still separate as eu..)
   str_replace_all("syrian", "syria") %>%
   str_replace_all("belarusian", "belaru") %>%
@@ -265,6 +304,14 @@ df3$stem <- df3$stem %>%
   str_replace_all("eastern", "east") %>%
   str_replace_all("britain", "british")
   #str_replace_all("uk", "british") # this one goes wrong for some reason
+```
+
+
+
+```{r}
+df3$stem  %>% 
+  filter(contains)
+   
 ```
 
 Let's count words again (regardless of which text) and visualize in order to get a rough view of the content an its topics as a whole, now that we have fixed our denonym problem.
