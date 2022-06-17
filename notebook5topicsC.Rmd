@@ -160,7 +160,7 @@ df2$clean_text <- df2$text %>%
   # Replace US to USA 
   str_replace_all("US", "USA") %>%
   # Replace US to USA 
-  str_replace_all("America", "USA") %>%
+  #str_replace_all("America", "USA") %>%
   # Replace European Union to EU
   str_replace_all("European Union", "EU") %>%
   # Replace European Union to EU
