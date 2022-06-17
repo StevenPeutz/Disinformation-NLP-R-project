@@ -3,6 +3,7 @@ title: "Pro-Kremlin Misinformation"
 output:
   html_document:
     df_print: paged
+    code_folding: hide
 ---
  
 ## Introduction
@@ -129,6 +130,7 @@ df1 <- df %>% distinct(text, .keep_all = TRUE)
 ## Sampling
 Taking a sample (SRS) to work with for now, to decrease processing time.
 ```{r}
+set.seed(10)
 df2 <- sample_n(df1, 2000) 
  
 ```
@@ -153,8 +155,12 @@ df2$clean_text <- df2$text %>%
   str_replace_all("&amp;", "and") %>%
   # Remove nbsp 
   str_replace_all("nbsp", " ") %>%
+  # Replace USSR to Soviet
+  str_replace_all("USSR", "Soviet") %>%
   # Replace US to USA 
   str_replace_all("US", "USA") %>%
+  # Replace US to USA 
+  str_replace_all("America", "USA") %>%
   # Replace European Union to EU
   str_replace_all("European Union", "EU") %>%
   # Replace European Union to EU
@@ -288,7 +294,7 @@ We can use 'replace_all' on the most common denonyms identified above, to manual
 df3$stem <- df3$stem %>%   
   str_replace_all("ukrainian", "ukrain") %>%
   str_replace_all("russian", "russia") %>%
-  str_replace_all("russia", " ") %>%
+  str_replace_all("russia", "99" ) %>%
   str_replace_all("european", "europ") %>% #since 'europe' already is stemmed to 'europ', but 'european' was not. 'eu' remains a separate term due its 'union' context. (rethough this, better as just eu, as european union is seperated and now is added to europe count, while eu is still separate as eu..)
   str_replace_all("syrian", "syria") %>%
   str_replace_all("belarusian", "belaru") %>%
@@ -302,16 +308,11 @@ df3$stem <- df3$stem %>%
   str_replace_all("usa", "america") %>%
   str_replace_all("swedish", "sweden") %>%
   str_replace_all("eastern", "east") %>%
-  str_replace_all("britain", "british")
+  str_replace_all("britain", "british") %>% 
+  str_replace_all("uk ", "british") %>%
+  str_trim("both") 
   #str_replace_all("uk", "british") # this one goes wrong for some reason
-```
-
-
-
-```{r}
-df3$stem  %>% 
-  filter(contains)
-   
+df3 <- df3[!df3$stem=="99",]
 ```
 
 Let's count words again (regardless of which text) and visualize in order to get a rough view of the content an its topics as a whole, now that we have fixed our denonym problem.
@@ -384,7 +385,7 @@ text_dfm <- df3  %>%
 ```
 ```{r, include = FALSE}
  
-stm_model <- stm(text_dfm, K = 5, init.type = "Spectral")
+stm_model <- stm(text_dfm, K = 4, init.type = "Spectral")
 ```
 
 Top 10 words per topic
@@ -408,20 +409,19 @@ stm_gamma <- tidy(stm_model, matrix = "gamma",
 
 stm_topics <- stm_gamma %>% 
   spread( key = topic, value = gamma) %>% 
-  dplyr::select(`1` ,  `2`  , `3`  , `4`,  `5`)
+  dplyr::select(`1` ,  `2`  , `3`  , `4`)
 
 stm_topic_doc <-stm_gamma %>% 
   spread( key = topic, value = gamma) %>% 
   rowwise() %>% 
-  mutate(dominant = max(`1`,`2`,`3`,`4`,`5`) 
+  mutate(dominant = max(`1`,`2`,`3`,`4`) 
   ) %>% 
   ungroup() %>% 
   mutate(topic_dominant = max.col(stm_topics , "first")) %>% 
   rename(cluster_1 = `1` ,
          cluster_2 = `2`,
          cluster_3 = `3`,
-         cluster_4 = `4`,
-         cluster_5 = `5`,)
+         cluster_4 = `4`)
 
 ```
 
@@ -461,7 +461,7 @@ resdf %>%
 We use Latent Dirichlet topic modelling (LDA) in order to create our mixed membership model. We use LDA because it is an algorithm that uses a three level hierarchical Bayesian model in which each item of a collection is modeled as a finite mixture over an underlying set of topics (Blei et al., 2001).  
 This in practical terms allows us to take into account that text might contain e.g. two topics instead of simply one.
 ```{r}
-lda_model <- LDA(text_dtm, k = 5, control = list(seed = 10)) 
+lda_model <- LDA(text_dtm, k = 4, control = list(seed = 10)) 
  
 ```
 
@@ -485,7 +485,7 @@ lda_beta %>%
   mutate(term = reorder(term, beta)) %>%
   ggplot(aes(term, beta, fill = factor(topic))) +
   geom_col(show.legend = FALSE) +
-  facet_wrap(~ topic, scales = "free", ncol = 5) +
+  facet_wrap(~ topic, scales = "free", ncol = 4) +
   coord_flip() 
 ```
 
@@ -505,20 +505,19 @@ lda_gamma %>%
 ```{r}
 lda_topics <- lda_gamma %>% 
   spread( key = topic, value = gamma) %>% 
-  dplyr::select(`1`,`2`, `3`, `4`, `5`)
+  dplyr::select(`1`,`2`, `3`, `4`)
 
 lda_topic_doc <-lda_gamma %>% 
   spread( key = topic, value = gamma) %>% 
   rowwise() %>% 
-  mutate(dominant = max(`1`,`2`,`3`,`4`,`5`) 
+  mutate(dominant = max(`1`,`2`,`3`,`4`) 
   ) %>% 
   ungroup() %>% 
   mutate(topic_dominant = max.col(lda_topics , "first")) %>% 
   rename(cluster_1 = `1` ,
          cluster_2 = `2`,
          cluster_3 = `3`,
-         cluster_4 = `4`,
-         cluster_5 = `5`)
+         cluster_4 = `4`)
 
 
 
@@ -633,16 +632,7 @@ wordcloud(words, probabilities, random.order = FALSE,
 
 #Manual validation
 For a second form of validation we will use manual 'expert' labelling anc compare results with the results predicted by our model. 
-
-
-
-With our STM 5 topic model based on the 1000 text sample we have the followinf 5 topics:  
-1 'Western Politcs' (keywords: west(ern), eu,  europ(ean), polit(ics/icians), belarus.  
-2 'Nato vs Russia' (keywords: nato, russia(n), war, europ(e).  
-3 'Ukraine' (keywords: Ukrain(ean), and to a lesser extent kyiv, people, president, donbas, poroshenko, coup, conflict)  
-4 'Russia' (keywords: russia, and to a lesser extent crimea, military, sanction)  
-5 'Chemical attack Syria' (keywords: syria, atack, chemic(al), terrorist, prepar(e)  
-
+ 
 
 With our LDA 5 topic model based on the 1000 text sample we have the followinf 5 topics:  
 1 'Chemical attack Syria' (keywords: ukraine, syria, atack, chemic(al), terrorist, prepar(e)
@@ -655,8 +645,9 @@ With our LDA 5 topic model based on the 1000 text sample we have the followinf 5
 
 Sampling
 ```{r}
- df_manual <- sample_n(df2, 10)
- df_manual
+set.seed(10)
+df_manual <- sample_n(df2, 30)
+df_manual
 ```
 My random sample has given me the text with the following ID's; 1607	4158	298	6395	3920	6319	3682	2842	6166	7263.  
 Reading through the raw texts (without stemming or other changes, we assign the them to topics.  
@@ -670,24 +661,17 @@ Reading through the raw texts (without stemming or other changes, we assign the 
 2842	-> topic: 2 (partly topic 4) | 4  
 6166	-> topic: 2 (partly topic 1) | 4  
 7263 -> topic: 3 (partly topic 4) | 2   
-
-
-
-SOme notes for us:  
-1) I still see some nbsp's in the data ()  
-2) US, we should replace us with 'usa', because it think it is being deleted (after small caps after all it is same as 'us'..)  
-3) Results of the topic modelling (also lda) still change quite strongly even with 1000 sample size..  
-4) is " str_replace_all("european union", "eu") " an option? (of course prior to replacing european, but are two word combincations possible like this?)  
-5) as eduardo ssuggested a while back, should we try also with 'russia' taken out?  
-
+ 
 
 ```{r}
- 
+dat %>% mutate(across(where(is.factor), as.character)) %>% 
+  left_join(lda_topic_doc, by = c("document" = "id"))  
+  #dplyr::select(id, text, )
  
 ```
 
 ```{r}
- 
+lda_topic_doc
  
 ```
 
