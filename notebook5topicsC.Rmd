@@ -634,13 +634,11 @@ wordcloud(words, probabilities, random.order = FALSE,
 For a second form of validation we will use manual 'expert' labelling anc compare results with the results predicted by our model. 
  
 
-With our LDA 5 topic model based on the 1000 text sample we have the followinf 5 topics:  
-1 'Chemical attack Syria' (keywords: america, syria, atack, chemic(al), terrorist, prepar(e)
-2 'Crimea' (keywords: russia, crimea, ukraine and to a lesser extent military, president, turkey, british, putin)  
-3 'The Donbas region' (keywords: ukraine, russia, donbas, elestions, kyiv)
-4 'EU and Nato (vs Russia)' (keywords: europ(ean), eu, nato, russia(n), war)  
-5 'Belarus and Russia vs the west and nato' (keywords: belarus, west(ern) nato, war)
-
+With our LDA topic model based on the 2000 text sample we have the following 4 topics:  
+1 'Chemical attack Syria' (also containing: america(n), syria(n), atack, chemic(al), czech(ia), trump)
+2 'War at bigger scope' (keywords: nato, sanctions, europe, military, war, poland, soviet, georgia)
+3 'Ukraine war' (keywords: ukraine, porochenko, donbas, crimea, kyiv)
+4 'Picking sides' (keywords: america, west(ern), belarus, germany, eu, europe, countries, nations)  
  
 
 Sampling
